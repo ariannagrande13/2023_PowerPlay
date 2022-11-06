@@ -50,6 +50,12 @@ public class AprilTagDemo extends LinearOpMode
     double fy = 578.272;
     double cx = 402.145;
     double cy = 221.506;
+    /*
+    double fx = 1430;
+    double fy = 1430;
+    double cx = 480;
+    double cy = 620;
+     */
 
     // UNITS ARE METERS
     double tagsize = 0.166;
