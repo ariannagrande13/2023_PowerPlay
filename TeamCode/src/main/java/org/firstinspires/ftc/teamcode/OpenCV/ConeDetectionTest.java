@@ -25,8 +25,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
+import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -36,7 +42,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 @TeleOp
-public class exampleWebcam extends LinearOpMode
+public class ConeDetectionTest extends LinearOpMode
 {
     OpenCvWebcam webcam;
 
@@ -200,6 +206,23 @@ public class exampleWebcam extends LinearOpMode
          * constantly allocating and freeing large chunks of memory.
          */
 
+        final Scalar BLUE = new Scalar(0, 0, 255);
+        final Scalar GREEN = new Scalar(0, 255, 0);
+        final Scalar RED = new Scalar(255, 0, 0);
+        final Scalar WHITE = new Scalar(255, 255, 255);
+
+        Mat HSV = new Mat();
+        Mat R = new Mat();
+
+        void inputToRed(Mat input) {
+            Imgproc.cvtColor(input, HSV, Imgproc.COLOR_RGB2HSV);
+            Core.extractChannel(HSV, R, 2);
+        }
+
+        public void init(Mat firstFrame) {
+            inputToRed(firstFrame);
+        }
+
         @Override
         public Mat processFrame(Mat input)
         {
@@ -213,7 +236,7 @@ public class exampleWebcam extends LinearOpMode
 
             /*
              * Draw a simple box around the middle 1/2 of the entire frame
-             */
+
             Imgproc.rectangle(
                     input,
                     new Point(
@@ -224,6 +247,10 @@ public class exampleWebcam extends LinearOpMode
                             input.rows()*(3f/4f)),
                     new Scalar(0, 255, 0), 4);
 
+             */
+
+            inputToRed(input);
+
             /**
              * NOTE: to see how to get data from your pipeline to your OpMode as well as how
              * to change which stage of the pipeline is rendered to the viewport when it is
@@ -231,6 +258,29 @@ public class exampleWebcam extends LinearOpMode
              */
 
             return input;
+        }
+
+        void drawAxisMarker(Mat buf, double length, int thickness, Mat rvec, Mat tvec, Mat cameraMatrix) {
+            // The points in 3D space we wish to project onto the 2D image plane.
+            // The origin of the coordinate space is assumed to be in the center of the detection.
+            MatOfPoint3f axis = new MatOfPoint3f(
+                    new Point3(0,0,0),
+                    new Point3(length,0,0),
+                    new Point3(0,length,0),
+                    new Point3(0,0,-length)
+            );
+
+            // Project those points
+            MatOfPoint2f matProjectedPoints = new MatOfPoint2f();
+            Calib3d.projectPoints(axis, rvec, tvec, cameraMatrix, new MatOfDouble(), matProjectedPoints);
+            Point[] projectedPoints = matProjectedPoints.toArray();
+
+            // Draw the marker!
+            Imgproc.line(buf, projectedPoints[0], projectedPoints[1], RED, thickness);
+            Imgproc.line(buf, projectedPoints[0], projectedPoints[2], GREEN, thickness);
+            Imgproc.line(buf, projectedPoints[0], projectedPoints[3], BLUE, thickness);
+
+            Imgproc.circle(buf, projectedPoints[0], thickness, WHITE, -1);
         }
 
         @Override
