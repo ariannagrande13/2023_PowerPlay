@@ -1,2 +1,20 @@
-package org.firstinspires.ftc.teamcode;public class servoTest {
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+public class servoTest extends LinearOpMode {
+
+    @Override
+    public void runOpMode() {
+
+        waitForStart();
+        if (opModeIsActive()) {
+            while (opModeIsActive()) {
+
+            }
+        }
+
+    }
+
+
 }
